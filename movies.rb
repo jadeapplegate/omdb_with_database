@@ -10,27 +10,42 @@ configure do
 end
 
 get '/' do
-  #Add code here
+  erb :search
 end
 
+get '/results' do
+  c = PGconn.new(:host => "localhost", :dbname => dbname)
+  @movies = c.exec_params("select * from movies WHERE title = $1;", [params[:title].capitalize])
+  c.close
+  erb :results
+end
 
-#Add code here
+get '/title/:id' do
+  c = PGconn.new(:host => "localhost", :dbname => dbname)
+  movies = c.exec_params("select * from movies WHERE id = $1;", [params[:id]])
+  @movie = movies[0]
 
+  # @actors = c.exec_params("select * from actors inner join movies_actors ON movies_actors.movie_id = $1;", [params[:id]])
+
+  c.close
+  erb :show
+end
 
 get '/movies/new' do
-  erb :new_movie
+  erb :new
 end
 
 post '/movies' do
   c = PGconn.new(:host => "localhost", :dbname => dbname)
-  c.exec_params("INSERT INTO movies (title, year) VALUES ($1, $2)",
-                  [params["title"], params["year"]])
+  c.exec_params("INSERT INTO movies (title, descriptioon) VALUES ($1, $2)",
+                  [params["title"], params["description"]])
   c.close
   redirect '/'
+  erb :new
 end
 
 def dbname
-  "test.db"
+  "testdb"
 end
 
 def create_movies_table
@@ -67,3 +82,4 @@ def seed_movies_table
   c.close
 end
 
+# binding.pry
